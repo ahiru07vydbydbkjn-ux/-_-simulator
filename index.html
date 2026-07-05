@@ -1,451 +1,480 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>ドライヤー/ブロワー 流体・絡まりシミュレーター (ベクトル場・演出強化版)</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.js"></script>
-    <style>
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f0f2f5;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .controls {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            align-items: center;
-            width: 850px;
-            box-sizing: border-box;
-        }
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            min-width: 160px;
-        }
-        label {
-            font-weight: bold;
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: #444;
-        }
-        .btn-group {
-            display: flex;
-            gap: 8px;
-        }
-        button {
-            padding: 10px 16px;
-            cursor: pointer;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-weight: bold;
-            background-color: #f9f9f9;
-            color: #333;
-            transition: all 0.2s;
-            font-size: 14px;
-        }
-        button.active {
-            background-color: #FF5722;
-            color: white;
-            border-color: #FF5722;
-        }
-        input[type="range"] {
-            width: 100%;
-        }
-        #canvas-container {
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            cursor: none; 
-        }
-        .instruction {
-            margin-top: 10px;
-            font-size: 14px;
-            font-weight: bold;
-            color: #1976D2;
-            text-align: left;
-            width: 100%;
-            background: #e3f2fd;
-            padding: 10px;
-            border-radius: 6px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ドライヤー/ブロワー 流体・絡まりシミュレーター (ベクトル場・演出強化版)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.js"></script>
+<style>
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.controls {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+    width: 100%;
+    max-width: 850px;
+    box-sizing: border-box;
+}
+.control-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 160px;
+}
+label {
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #444;
+}
+.btn-group {
+    display: flex;
+    gap: 8px;
+}
+button {
+    padding: 10px 16px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-weight: bold;
+    background-color: #f9f9f9;
+    color: #333;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+button.active {
+    background-color: #FF5722;
+    color: white;
+    border-color: #FF5722;
+}
+input[type="range"] {
+    width: 100%;
+}
+#canvas-container {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    cursor: none;
+    max-width: 100%;
+    touch-action: none;
+    line-height: 0;
+}
+.instruction {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #1976D2;
+    text-align: left;
+    width: 100%;
+    background: #e3f2fd;
+    padding: 10px;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+@media (max-width: 600px) {
+    body {
+        padding: 8px;
+    }
+    .controls {
+        padding: 12px;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    .control-group {
+        min-width: 120px;
+    }
+    button {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    .instruction {
+        font-size: 12px;
+        padding: 8px;
+        margin-top: 8px;
+        line-height: 1.5;
+    }
+}
+</style>
 </head>
 <body>
 
-    <div class="controls">
-        <div class="control-group">
-            <label>デバイスの切り替え</label>
-            <div class="btn-group">
-                <button id="btnDryer" class="active">ドライヤー</button>
-                <button id="btnBlower">業務用ブロワー</button>
-            </div>
-        </div>
-        <div class="control-group" style="flex: 1;">
-            <label for="windSpeed">流速 (風速): <span id="speedLabel">15</span> m/s</label>
-            <input type="range" id="windSpeed" min="10" max="25" value="15" step="5">
-        </div>
-        <div class="instruction">
-            🖱️ <b>操作方法:</b> マウス位置が風の衝突点（よどみ点）。クリック＆ドラッグで風が発生します。<br>
-            🌪️ <b>絡まる:</b> よどみ点を激しく揺らすと、乱れたベクトルにより毛同士が引き合い束（もつれ）になります。<br>
-            ✨ <b>整う:</b> マウスを止めて安定した層流を当て続けると、絡まりが解け、スッと一直線に整います。
-        </div>
-    </div>
+<div class="controls">
+<div class="control-group">
+<label>デバイスの切り替え</label>
+<div class="btn-group">
+<button id="btnDryer" class="active">ドライヤー</button>
+<button id="btnBlower">業務用ブロワー</button>
+</div>
+</div>
+<div class="control-group" style="flex: 1;">
+<label for="windSpeed">流速 (風速): <span id="speedLabel">15</span> m/s</label>
+<input type="range" id="windSpeed" min="10" max="25" value="15" step="5">
+</div>
+<div class="instruction">
+🖱️ <b>操作方法:</b> マウス位置が風の衝突点（よどみ点）。クリック＆ドラッグで風が発生します。<br>
+🌪️ <b>絡まる:</b> よどみ点を激しく揺らすと、乱れたベクトルにより毛同士が引き合い束（もつれ）になります。<br>
+✨ <b>整う:</b> マウスを止めて安定した層流を当て続けると、絡まりが解け、スッと一直線に整います。
+</div>
+</div>
 
-    <div id="canvas-container"></div>
+<div id="canvas-container"></div>
 
-    <script>
-        let hairs = [];
-        let particles = [];
-        
-        let deviceType = 'dryer'; 
-        let currentSpeed = 15;
+<script>
+let hairs = [];
+let particles = [];
 
-        let smoothedMouseVel;
-        let isTurbulent = false;
-        
-        // 乱流がどのくらい継続しているか（安定度の指標）
-        let turbulenceLevel = 0; 
+let deviceType = 'dryer';
+let currentSpeed = 15;
 
-        // 空間パラメータ
-        let skinCenterX, skinCenterY;
-        const skinRadius = 180;
+let smoothedMouseVel;
+let isTurbulent = false;
 
-        function setup() {
-            let canvas = createCanvas(850, 600);
-            canvas.parent('canvas-container');
+let turbulenceLevel = 0;
 
-            skinCenterX = width / 2;
-            skinCenterY = height / 2;
-            smoothedMouseVel = createVector(0, 0);
+let skinCenterX, skinCenterY;
+let skinRadius = 180;
+const BASE_W = 850;
+const BASE_H = 600;
+const BASE_RADIUS = 180;
 
-            select('#btnDryer').mousePressed(() => setDevice('dryer', '#btnDryer'));
-            select('#btnBlower').mousePressed(() => setDevice('blower', '#btnBlower'));
-            select('#windSpeed').input(updateSpeed);
+function getCanvasSize() {
+    let w = min(windowWidth - 24, BASE_W);
+    let h = w * (BASE_H / BASE_W);
+    let maxH = windowHeight * 0.6;
+    if (h > maxH) {
+        h = maxH;
+        w = h * (BASE_W / BASE_H);
+    }
+    return { w: floor(w), h: floor(h) };
+}
 
-            generateCoat();
+function setup() {
+    let sz = getCanvasSize();
+    let canvas = createCanvas(sz.w, sz.h);
+    canvas.parent('canvas-container');
+
+    skinCenterX = width / 2;
+    skinCenterY = height / 2;
+    skinRadius = BASE_RADIUS * (width / BASE_W);
+    smoothedMouseVel = createVector(0, 0);
+
+    select('#btnDryer').mousePressed(() => setDevice('dryer', '#btnDryer'));
+    select('#btnBlower').mousePressed(() => setDevice('blower', '#btnBlower'));
+    select('#windSpeed').input(updateSpeed);
+
+    generateCoat();
+}
+
+function windowResized() {
+    let sz = getCanvasSize();
+    resizeCanvas(sz.w, sz.h);
+    skinCenterX = width / 2;
+    skinCenterY = height / 2;
+    skinRadius = BASE_RADIUS * (width / BASE_W);
+    generateCoat();
+}
+
+function touchMoved() {
+    return false;
+}
+
+function draw() {
+    background(20, 25, 30);
+
+    noStroke();
+    fill(180, 140, 120, 60);
+    ellipse(skinCenterX, skinCenterY, skinRadius * 2, skinRadius * 2);
+
+    let mVel = createVector(mouseX - pmouseX, mouseY - pmouseY);
+    smoothedMouseVel.lerp(mVel, 0.2);
+
+    let isShaking = smoothedMouseVel.magSq() > 49;
+    isTurbulent = isShaking || (currentSpeed >= 30 && smoothedMouseVel.magSq() > 9);
+
+    if (isTurbulent) {
+        turbulenceLevel = min(turbulenceLevel + 0.1, 1.0);
+    } else {
+        turbulenceLevel = max(turbulenceLevel - 0.02, 0.0);
+    }
+
+    if (mouseIsPressed && mouseInCanvas()) {
+        let spawnCount = map(currentSpeed, 10, 75, 5, 12);
+        for (let i = 0; i < spawnCount; i++) {
+            let theta = random(TWO_PI);
+            let offsetR = random(5, 15);
+            let startX = mouseX + cos(theta) * offsetR;
+            let startY = mouseY + sin(theta) * offsetR;
+
+            particles.push(new WindParticle(startX, startY, currentSpeed));
         }
+    }
 
-        function draw() {
-            background(20, 25, 30);
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.update();
+        p.display();
+        if (p.isOffScreen()) {
+            particles.splice(i, 1);
+        }
+    }
 
-            // 皮膚エリア
-            noStroke();
-            fill(180, 140, 120, 60);
-            ellipse(skinCenterX, skinCenterY, skinRadius * 2, skinRadius * 2);
+    for (let h of hairs) {
+        h.update();
+    }
+    for (let h of hairs) {
+        h.display();
+    }
 
-            // マウス移動速度の平滑化
-            let mVel = createVector(mouseX - pmouseX, mouseY - pmouseY);
-            smoothedMouseVel.lerp(mVel, 0.2);
+    if (mouseInCanvas()) {
+        noCursor();
+        push();
+        translate(mouseX, mouseY);
+        fill(255, 50, 50, 200);
+        stroke(255, 255, 255, 150);
+        strokeWeight(1.5);
+        ellipse(0, 0, 12, 12);
 
-            let isShaking = smoothedMouseVel.magSq() > 49; 
-            isTurbulent = isShaking || (currentSpeed >= 30 && smoothedMouseVel.magSq() > 9);
-
-            // 安定度（乱流レベル）の計算
+        if (mouseIsPressed) {
+            noFill();
+            let waveSize = 30 + sin(frameCount * 0.5) * 5;
             if (isTurbulent) {
-                turbulenceLevel = min(turbulenceLevel + 0.1, 1.0);
+                stroke(255, 100, 100, 150);
+                drawingContext.setLineDash([5, 5]);
             } else {
-                turbulenceLevel = max(turbulenceLevel - 0.02, 0.0); // 動かさないと徐々に安定（0）へ
+                stroke(100, 200, 255, 150);
+                drawingContext.setLineDash([]);
             }
-
-            // 流体パーティクルの生成
-            if (mouseIsPressed && mouseInCanvas()) {
-                let spawnCount = map(currentSpeed, 10, 75, 5, 12); 
-                for (let i = 0; i < spawnCount; i++) {
-                    let theta = random(TWO_PI);
-                    let offsetR = random(5, 15);
-                    let startX = mouseX + cos(theta) * offsetR;
-                    let startY = mouseY + sin(theta) * offsetR;
-                    
-                    particles.push(new WindParticle(startX, startY, currentSpeed));
-                }
-            }
-
-            // パーティクルの更新と描画
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.update();
-                p.display();
-                if (p.isOffScreen()) {
-                    particles.splice(i, 1);
-                }
-            }
-
-            // 被毛の物理演算と描画
-            for (let h of hairs) {
-                h.update();
-            }
-            // 描画を分けることで引力の計算を安定させる
-            for (let h of hairs) {
-                h.display();
-            }
-
-            // よどみ点（マウスポインタ）の描画
-            if (mouseInCanvas()) {
-                noCursor();
-                push();
-                translate(mouseX, mouseY);
-                fill(255, 50, 50, 200);
-                stroke(255, 255, 255, 150);
-                strokeWeight(1.5);
-                ellipse(0, 0, 12, 12);
-                
-                if (mouseIsPressed) {
-                    noFill();
-                    // 乱流時は波紋が乱れる表現
-                    let waveSize = 30 + sin(frameCount * 0.5) * 5;
-                    if (isTurbulent) {
-                        stroke(255, 100, 100, 150);
-                        drawingContext.setLineDash([5, 5]);
-                    } else {
-                        stroke(100, 200, 255, 150);
-                        drawingContext.setLineDash([]);
-                    }
-                    strokeWeight(2);
-                    ellipse(0, 0, waveSize, waveSize); 
-                }
-                pop();
-            } else {
-                cursor(ARROW);
-            }
+            strokeWeight(2);
+            ellipse(0, 0, waveSize, waveSize);
         }
+        pop();
+    } else {
+        cursor(ARROW);
+    }
+}
 
-        function generateCoat() {
-            hairs = [];
-            for (let i = 0; i < 350; i++) {
-                let r = sqrt(random()) * skinRadius;
-                let theta = random(TWO_PI);
-                let bx = skinCenterX + cos(theta) * r;
-                let by = skinCenterY + sin(theta) * r;
-                hairs.push(new Hair(bx, by));
-            }
-            hairs.sort((a, b) => a.normalAngle - b.normalAngle);
-            for (let i = 0; i < hairs.length; i++) {
-                hairs[i].index = i;
-            }
+function generateCoat() {
+    hairs = [];
+    for (let i = 0; i < 350; i++) {
+        let r = sqrt(random()) * skinRadius;
+        let theta = random(TWO_PI);
+        let bx = skinCenterX + cos(theta) * r;
+        let by = skinCenterY + sin(theta) * r;
+        hairs.push(new Hair(bx, by));
+    }
+    hairs.sort((a, b) => a.normalAngle - b.normalAngle);
+    for (let i = 0; i < hairs.length; i++) {
+        hairs[i].index = i;
+    }
+}
+
+class Hair {
+    constructor(bx, by) {
+        this.baseX = bx;
+        this.baseY = by;
+        this.segments = 10;
+        this.segLen = 8;
+        this.nodes = [];
+        this.vels = [];
+        this.tangled = [];
+        this.tanglePartner = [];
+        this.index = 0;
+
+        this.normalAngle = atan2(by - skinCenterY, bx - skinCenterX);
+
+        for(let i = 0; i <= this.segments; i++){
+            this.nodes.push(createVector(bx, by));
+            this.vels.push(createVector(0, 0));
+            this.tangled.push(false);
+            this.tanglePartner.push(null);
         }
+    }
 
-        class Hair {
-            constructor(bx, by) {
-                this.baseX = bx;
-                this.baseY = by;
-                this.segments = 10; 
-                this.segLen = 8;    
-                this.nodes = [];
-                this.vels = [];
-                this.tangled = [];  
-                this.tanglePartner = []; // 絡まっている相手の毛のノードを記憶
-                this.index = 0;
-                
-                this.normalAngle = atan2(by - skinCenterY, bx - skinCenterX);
+    update() {
+        this.nodes[0].x = this.baseX;
+        this.nodes[0].y = this.baseY;
 
-                for(let i = 0; i <= this.segments; i++){
-                    this.nodes.push(createVector(bx, by));
-                    this.vels.push(createVector(0, 0));
-                    this.tangled.push(false);
-                    this.tanglePartner.push(null);
+        let effectRadius = map(currentSpeed, 10, 75, 120, 280);
+        let effectRadiusSq = effectRadius * effectRadius;
+        let isBlowing = mouseIsPressed && mouseInCanvas();
+
+        for (let i = 1; i <= this.segments; i++) {
+            let n = this.nodes[i];
+            let prev = this.nodes[i-1];
+            let v = this.vels[i];
+
+            let windForce = createVector(0, 0);
+
+            if (isBlowing) {
+                let dx = n.x - mouseX;
+                let dy = n.y - mouseY;
+                let distSq = dx * dx + dy * dy;
+
+                if (distSq < effectRadiusSq && distSq > 0) {
+                    let d = sqrt(distSq);
+                    let forceMag = map(d, 0, effectRadius, currentSpeed * 0.05, 0);
+
+                    let baseAngle = atan2(dy, dx);
+
+                    let noiseVal = noise(n.x * 0.02, n.y * 0.02, frameCount * 0.05) - 0.5;
+                    let swirlAngle = baseAngle + (noiseVal * TWO_PI * turbulenceLevel * 0.8);
+
+                    let fx = cos(swirlAngle) * forceMag;
+                    let fy = sin(swirlAngle) * forceMag;
+
+                    windForce.set(fx, fy);
                 }
             }
 
-            update() {
-                this.nodes[0].x = this.baseX;
-                this.nodes[0].y = this.baseY;
-
-                let effectRadius = map(currentSpeed, 10, 75, 120, 280);
-                let effectRadiusSq = effectRadius * effectRadius;
-                let isBlowing = mouseIsPressed && mouseInCanvas();
-
-                for (let i = 1; i <= this.segments; i++) {
-                    let n = this.nodes[i];
-                    let prev = this.nodes[i-1];
-                    let v = this.vels[i];
-                    
-                    let windForce = createVector(0, 0);
-
-                    // 風のベクトル場からの影響
-                    if (isBlowing) {
-                        let dx = n.x - mouseX;
-                        let dy = n.y - mouseY;
-                        let distSq = dx * dx + dy * dy;
-
-                        if (distSq < effectRadiusSq && distSq > 0) {
-                            let d = sqrt(distSq);
-                            let forceMag = map(d, 0, effectRadius, currentSpeed * 0.05, 0);
-                            
-                            // 放射状の基本ベクトル
-                            let baseAngle = atan2(dy, dx);
-                            
-                            // パーリンノイズによる「滑らかな渦・うねり」の追加
-                            // 乱流レベル(turbulenceLevel)が高いほどうねりが強くなる
-                            let noiseVal = noise(n.x * 0.02, n.y * 0.02, frameCount * 0.05) - 0.5;
-                            let swirlAngle = baseAngle + (noiseVal * TWO_PI * turbulenceLevel * 0.8);
-
-                            let fx = cos(swirlAngle) * forceMag;
-                            let fy = sin(swirlAngle) * forceMag;
-                            
-                            windForce.set(fx, fy);
-                        }
-                    }
-
-                    // 絡まり判定と物理挙動
-                    if (windForce.magSq() > 0) {
-                        if (turbulenceLevel > 0.3) {
-                            // 乱流時：隣接する毛と近ければ絡まる（束になる）
-                            for (let offset = -2; offset <= 2; offset++) {
-                                if (offset === 0) continue;
-                                let otherIdx = (this.index + offset + hairs.length) % hairs.length;
-                                let other = hairs[otherIdx];
-                                
-                                let dx = n.x - other.nodes[i].x;
-                                let dy = n.y - other.nodes[i].y;
-                                if (dx*dx + dy*dy < 49 && !this.tangled[i]) { 
-                                    this.tangled[i] = true;
-                                    other.tangled[i] = true;
-                                    this.tanglePartner[i] = other.nodes[i];
-                                    other.tanglePartner[i] = n;
-                                }
-                            }
-                        } else if (turbulenceLevel < 0.1) {
-                            // 安定時（層流）：安定した風が当たると、絡まりがスッと解ける
-                            // 毛先(iが大きい)ほど解けやすい
-                            let untangleProb = map(i, 1, this.segments, 0.05, 0.3);
-                            if (random() < untangleProb) { 
-                                this.tangled[i] = false;
-                                this.tanglePartner[i] = null;
-                            }
-                        }
-                    }
-
-                    // 絡まっている場合、相手の毛と引力を働かせて「束」を表現
-                    if (this.tangled[i] && this.tanglePartner[i]) {
-                        let partner = this.tanglePartner[i];
-                        let pullX = (partner.x - n.x) * 0.1;
-                        let pullY = (partner.y - n.y) * 0.1;
-                        windForce.x += pullX;
-                        windForce.y += pullY;
-                    }
-
-                    // 弾力性による復元力
-                    let targetX = prev.x + cos(this.normalAngle) * this.segLen;
-                    let targetY = prev.y + sin(this.normalAngle) * this.segLen;
-                    let elasticity = map(i, 1, this.segments, 0.5, 0.1); 
-                    
-                    n.x = lerp(n.x, targetX, elasticity);
-                    n.y = lerp(n.y, targetY, elasticity);
-
-                    // 運動更新
-                    v.add(windForce);
-                    v.mult(0.70); // 空気抵抗
-                    n.add(v);
-
-                    // IK (長さ拘束)
-                    let dirX = n.x - prev.x;
-                    let dirY = n.y - prev.y;
-                    let len = sqrt(dirX*dirX + dirY*dirY);
-                    if (len > 0) {
-                        n.x = prev.x + (dirX / len) * this.segLen;
-                        n.y = prev.y + (dirY / len) * this.segLen;
-                    }
-                }
-            }
-
-            display() {
-                noFill();
-                beginShape();
-                for (let i = 0; i <= this.segments; i++) {
-                    if (this.tangled[i]) {
-                        // 絡まり（もつれ）は赤黒い色で束感を強調
-                        stroke(200, 50, 50, 220);
-                        strokeWeight(2.5);
-                    } else {
-                        // 綺麗に整っている毛
-                        let alpha = map(i, 0, this.segments, 255, 120);
-                        stroke(130, 110, 90, alpha);
-                        strokeWeight(1.5);
-                    }
-                    curveVertex(this.nodes[i].x, this.nodes[i].y);
-                }
-                endShape();
-            }
-        }
-
-        // --- 視覚エフェクト用パーティクル（パーリンノイズによる滑らかなベクトル場） ---
-        class WindParticle {
-            constructor(x, y, speed) {
-                this.pos = createVector(x, y);
-                this.speed = speed * 0.6;
-                this.life = 255;
-            }
-            update() {
-                // よどみ点（マウス）からの距離と角度
-                let dx = this.pos.x - mouseX;
-                let dy = this.pos.y - mouseY;
-                let baseAngle = atan2(dy, dx);
-                
-                // 乱雑な散らばりを廃止し、ノイズで滑らかな「気流のうねり（渦）」を表現
-                let noiseVal = noise(this.pos.x * 0.015, this.pos.y * 0.015, frameCount * 0.02) - 0.5;
-                let swirlAngle = baseAngle + (noiseVal * TWO_PI * turbulenceLevel);
-
-                this.pos.x += cos(swirlAngle) * this.speed;
-                this.pos.y += sin(swirlAngle) * this.speed;
-                
-                this.life -= map(currentSpeed, 10, 75, 8, 15);
-            }
-            display() {
-                noStroke();
+            if (windForce.magSq() > 0) {
                 if (turbulenceLevel > 0.3) {
-                    fill(255, 180, 180, this.life * 0.5); // 乱流は赤みを帯びる
-                } else {
-                    fill(200, 230, 255, this.life * 0.5); // 層流は青白い
+                    for (let offset = -2; offset <= 2; offset++) {
+                        if (offset === 0) continue;
+                        let otherIdx = (this.index + offset + hairs.length) % hairs.length;
+                        let other = hairs[otherIdx];
+
+                        let dx = n.x - other.nodes[i].x;
+                        let dy = n.y - other.nodes[i].y;
+                        if (dx*dx + dy*dy < 49 && !this.tangled[i]) {
+                            this.tangled[i] = true;
+                            other.tangled[i] = true;
+                            this.tanglePartner[i] = other.nodes[i];
+                            other.tanglePartner[i] = n;
+                        }
+                    }
+                } else if (turbulenceLevel < 0.1) {
+                    let untangleProb = map(i, 1, this.segments, 0.05, 0.3);
+                    if (random() < untangleProb) {
+                        this.tangled[i] = false;
+                        this.tanglePartner[i] = null;
+                    }
                 }
-                let size = map(currentSpeed, 10, 75, 4, 8);
-                ellipse(this.pos.x, this.pos.y, size, size);
             }
-            isOffScreen() {
-                return this.life <= 0 || 
-                       this.pos.x < 0 || this.pos.x > width || 
-                       this.pos.y < 0 || this.pos.y > height;
+
+            if (this.tangled[i] && this.tanglePartner[i]) {
+                let partner = this.tanglePartner[i];
+                let pullX = (partner.x - n.x) * 0.1;
+                let pullY = (partner.y - n.y) * 0.1;
+                windForce.x += pullX;
+                windForce.y += pullY;
+            }
+
+            let targetX = prev.x + cos(this.normalAngle) * this.segLen;
+            let targetY = prev.y + sin(this.normalAngle) * this.segLen;
+            let elasticity = map(i, 1, this.segments, 0.5, 0.1);
+
+            n.x = lerp(n.x, targetX, elasticity);
+            n.y = lerp(n.y, targetY, elasticity);
+
+            v.add(windForce);
+            v.mult(0.70);
+            n.add(v);
+
+            let dirX = n.x - prev.x;
+            let dirY = n.y - prev.y;
+            let len = sqrt(dirX*dirX + dirY*dirY);
+            if (len > 0) {
+                n.x = prev.x + (dirX / len) * this.segLen;
+                n.y = prev.y + (dirY / len) * this.segLen;
             }
         }
+    }
 
-        // --- UI コントロール ---
-        function setDevice(type, btnId) {
-            deviceType = type;
-            selectAll('.btn-group button').forEach(b => b.removeClass('active'));
-            select(btnId).addClass('active');
-
-            let slider = select('#windSpeed');
-            if (type === 'dryer') {
-                slider.attribute('min', 10);
-                slider.attribute('max', 25);
-                slider.value(15);
-                currentSpeed = 15;
+    display() {
+        noFill();
+        beginShape();
+        for (let i = 0; i <= this.segments; i++) {
+            if (this.tangled[i]) {
+                stroke(200, 50, 50, 220);
+                strokeWeight(2.5);
             } else {
-                slider.attribute('min', 30);
-                slider.attribute('max', 75);
-                slider.value(50);
-                currentSpeed = 50;
+                let alpha = map(i, 0, this.segments, 255, 120);
+                stroke(130, 110, 90, alpha);
+                strokeWeight(1.5);
             }
-            select('#speedLabel').html(currentSpeed);
+            curveVertex(this.nodes[i].x, this.nodes[i].y);
         }
+        endShape();
+    }
+}
 
-        function updateSpeed() {
-            currentSpeed = parseInt(this.value());
-            select('#speedLabel').html(currentSpeed);
-        }
+class WindParticle {
+    constructor(x, y, speed) {
+        this.pos = createVector(x, y);
+        this.speed = speed * 0.6;
+        this.life = 255;
+    }
+    update() {
+        let dx = this.pos.x - mouseX;
+        let dy = this.pos.y - mouseY;
+        let baseAngle = atan2(dy, dx);
 
-        function mouseInCanvas() {
-            return mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height;
+        let noiseVal = noise(this.pos.x * 0.015, this.pos.y * 0.015, frameCount * 0.02) - 0.5;
+        let swirlAngle = baseAngle + (noiseVal * TWO_PI * turbulenceLevel);
+
+        this.pos.x += cos(swirlAngle) * this.speed;
+        this.pos.y += sin(swirlAngle) * this.speed;
+
+        this.life -= map(currentSpeed, 10, 75, 8, 15);
+    }
+    display() {
+        noStroke();
+        if (turbulenceLevel > 0.3) {
+            fill(255, 180, 180, this.life * 0.5);
+        } else {
+            fill(200, 230, 255, this.life * 0.5);
         }
-    </script>
+        let size = map(currentSpeed, 10, 75, 4, 8);
+        ellipse(this.pos.x, this.pos.y, size, size);
+    }
+    isOffScreen() {
+        return this.life <= 0 ||
+            this.pos.x < 0 || this.pos.x > width ||
+            this.pos.y < 0 || this.pos.y > height;
+    }
+}
+
+function setDevice(type, btnId) {
+    deviceType = type;
+    selectAll('.btn-group button').forEach(b => b.removeClass('active'));
+    select(btnId).addClass('active');
+
+    let slider = select('#windSpeed');
+    if (type === 'dryer') {
+        slider.attribute('min', 10);
+        slider.attribute('max', 25);
+        slider.value(15);
+        currentSpeed = 15;
+    } else {
+        slider.attribute('min', 30);
+        slider.attribute('max', 75);
+        slider.value(50);
+        currentSpeed = 50;
+    }
+    select('#speedLabel').html(currentSpeed);
+}
+
+function updateSpeed() {
+    currentSpeed = parseInt(this.value());
+    select('#speedLabel').html(currentSpeed);
+}
+
+function mouseInCanvas() {
+    return mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height;
+}
+</script>
 </body>
 </html>
