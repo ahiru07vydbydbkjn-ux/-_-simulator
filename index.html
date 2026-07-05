@@ -61,7 +61,57 @@ button.active {
     border-color: #FF5722;
 }
 input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
     width: 100%;
+    height: 32px;
+    background: transparent;
+    margin: 8px 0;
+    touch-action: pan-x;
+}
+input[type="range"]:focus {
+    outline: none;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #ddd;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #FF5722;
+    border: 3px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    cursor: grab;
+    margin-top: -10px;
+}
+input[type="range"]::-webkit-slider-thumb:active {
+    cursor: grabbing;
+    background: #E64A19;
+}
+input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #ddd;
+}
+input[type="range"]::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #FF5722;
+    border: 3px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    cursor: grab;
+}
+input[type="range"]::-moz-range-thumb:active {
+    cursor: grabbing;
+    background: #E64A19;
 }
 #canvas-container {
     border-radius: 8px;
@@ -187,8 +237,10 @@ function windowResized() {
     generateCoat();
 }
 
-function touchMoved() {
-    return false;
+function touchMoved(event) {
+    if (event && event.target && event.target.tagName === 'CANVAS') {
+        return false;
+    }
 }
 
 function draw() {
